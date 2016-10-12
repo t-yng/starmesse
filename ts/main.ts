@@ -47,7 +47,7 @@ class StarMesse {
   private addSidebar () {
     $('body').prepend('<div class="sidebar"><div class="sidebar-content"></div></div>')
     $('.sidebar').prepend('<h1 id="_favoriteRoomTitle" class="contentHl mainContentHl"></h1>')
-    $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim" style="margin-right: auto;">マイチャット</span>')
+    $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim">お気に入りメッセージを表示</span>')
     $('#_favoriteRoomTitle').append('<i id="sidebarCloseBtn" class="fa fa-times close-btn" aria-hidden="true" style="margin-right: 5px;"></i>')
     $('#sidebarCloseBtn').on('click', () => {
       this.closeSidebar()
@@ -73,6 +73,7 @@ class StarMesse {
 
     $('#_mainContent > div.chatRoomHeaderBtn.btnGroup').prepend($button)
 
+    // ボタンを追加した分、メンバーリストを左にずらす
     $('#_subRoomMemberArea').css('right', '185px')
   }
 
@@ -208,14 +209,22 @@ class StarMesse {
    * @param favoriteMessageList
    */
   private showSidebar (favoriteMessageList: Array<string>) {
+    // メッセージ一覧のDOMをサイドバーで表示するために修正
     let $favoriteTimeline = $('#_timeLine').clone()
     $favoriteTimeline.attr('id', '_favoriteTimeline')
     $favoriteTimeline.css('height', '')
     $favoriteTimeline.children().remove()
 
+    // お気に入りメッセージを追加
     favoriteMessageList.forEach(html => $favoriteTimeline.append(html))
 
+    // チャット部屋の名前をサイドバーの名前に設定
+    const roomTitleText = $('#_mainContent ._roomTitleText').text()
+    $('.sidebar ._roomTitleText').text(roomTitleText)
+
+    // お気に入りメッセージ一覧を追加
     $('.sidebar-content').append($favoriteTimeline.get(0).outerHTML)
+
     $('.sidebar').addClass('open')
   }
 

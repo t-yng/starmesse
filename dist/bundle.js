@@ -126,7 +126,7 @@ var StarMesse = (function () {
         var _this = this;
         $('body').prepend('<div class="sidebar"><div class="sidebar-content"></div></div>');
         $('.sidebar').prepend('<h1 id="_favoriteRoomTitle" class="contentHl mainContentHl"></h1>');
-        $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim" style="margin-right: auto;">マイチャット</span>');
+        $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim">お気に入りメッセージを表示</span>');
         $('#_favoriteRoomTitle').append('<i id="sidebarCloseBtn" class="fa fa-times close-btn" aria-hidden="true" style="margin-right: 5px;"></i>');
         $('#sidebarCloseBtn').on('click', function () {
             _this.closeSidebar();
@@ -272,11 +272,17 @@ var StarMesse = (function () {
      * @param favoriteMessageList
      */
     StarMesse.prototype.showSidebar = function (favoriteMessageList) {
+        // メッセージ一覧のDOMをサイドバーで表示するために修正
         var $favoriteTimeline = $('#_timeLine').clone();
         $favoriteTimeline.attr('id', '_favoriteTimeline');
         $favoriteTimeline.css('height', '');
         $favoriteTimeline.children().remove();
+        // お気に入りメッセージを追加
         favoriteMessageList.forEach(function (html) { return $favoriteTimeline.append(html); });
+        // チャット部屋の名前をサイドバーの名前に設定
+        var roomTitleText = $('#_mainContent ._roomTitleText').text();
+        $('.sidebar ._roomTitleText').text(roomTitleText);
+        // お気に入りメッセージ一覧を追加
         $('.sidebar-content').append($favoriteTimeline.get(0).outerHTML);
         $('.sidebar').addClass('open');
     };

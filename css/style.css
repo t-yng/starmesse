@@ -63,6 +63,11 @@
   transition: opacity 0.8s, width 0.8s;
 }
 
+.sidebar ._roomTitleText {
+  margin-right: auto !important;
+  max-width: 95% !important;
+}
+
 .sidebar.open {
   opacity: 1;
   width: 500px;
