@@ -1,0 +1,45 @@
+{
+  "name": "starmesse",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "description": "",
+  "background":{
+    "scripts": [
+			"js/background.js"
+		]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.chatwork.com/*",
+        "https://kcw.kddi.ne.jp/*"
+      ],
+      "js": [
+        "node_modules/jquery/dist/jquery.min.js",
+        "node_modules/lodash/lodash.min.js",
+        "node_modules/lz-string/libs/lz-string.min.js",
+        "dist/bundle.js"
+      ],
+      "css": [
+        "css/components-font-awesome/css/font-awesome.css",
+        "css/style.css"
+      ],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "https://www.chatwork.com/*",
+    "https://kcw.kddi.ne.jp/*",
+    "https://kcw.kddi.ne.jp/fonts/fontawesome-webfont.woff2?v=4.6.1"
+  ],
+  "page_action": {
+    "default_title": "starmesse"
+  },
+  "web_accessible_resources": [
+    "/css/components-font-awesome/*"
+  ]
+}

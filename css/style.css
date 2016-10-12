@@ -1,0 +1,85 @@
+.btnNavList li {
+ width: initial !important;
+}
+
+.favorite-message-filter-icon {
+ display: inline-block;
+ vertical-align: middle;
+ cursor: pointer;
+ color: gold;
+ font-size: 22px;
+ margin-left: 10px;
+ opacity: 0.4;
+}
+
+.favorite-message-filter-icon.un-checked {
+ opacity: 0.3;
+}
+
+.favorite-message-filter-icon.un-checked:hover {
+ opacity: 0.5;
+}
+
+.favorite-message-filter-icon.checked {
+ opacity: 1.0;
+}
+
+.favorite-icon.un-checked {
+ color: black;
+}
+
+.favorite-icon.checked {
+ color: gold;
+}
+
+.favorite-icon:hover,
+.favorite-icon:hover[class~="un-checked"] {
+ cursor: pointer;
+}
+
+.favorite-icon:hover[class~="un-checked"] {
+ color: gray;
+}
+
+@keyframes show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 0;
+  opacity: 0;
+  background: white;
+  z-index: 9999;
+  border-left: 1px solid gray;
+  transition: opacity 0.8s, width 0.8s;
+}
+
+.sidebar.open {
+  opacity: 1;
+  width: 500px;
+}
+
+#_favoriteRoomTitle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.close-btn {
+  cursor: pointer;
+}
+
+#_favoriteTimeline {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 730px;
+}

@@ -1,0 +1,87 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "components-font-awesome",
+        "scope": null,
+        "escapedName": "components-font-awesome",
+        "name": "components-font-awesome",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/Users/tomohiro/workspace/typescript/starMesse"
+    ]
+  ],
+  "_from": "components-font-awesome@latest",
+  "_id": "components-font-awesome@4.6.1",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/components-font-awesome",
+  "_nodeVersion": "4.4.3",
+  "_npmOperationalInternal": {
+    "host": "packages-16-east.internal.npmjs.com",
+    "tmp": "tmp/components-font-awesome-4.6.1.tgz_1461800726660_0.6402984373271465"
+  },
+  "_npmUser": {
+    "name": "ducin",
+    "email": "tomasz.ducin@gmail.com"
+  },
+  "_npmVersion": "2.15.1",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "components-font-awesome",
+    "scope": null,
+    "escapedName": "components-font-awesome",
+    "name": "components-font-awesome",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/components-font-awesome/-/components-font-awesome-4.6.1.tgz",
+  "_shasum": "8bd7820dc9921cad836c3ca88a992995c24cbe59",
+  "_shrinkwrap": null,
+  "_spec": "components-font-awesome",
+  "_where": "/Users/tomohiro/workspace/typescript/starMesse",
+  "bugs": {
+    "url": "https://github.com/components/font-awesome/issues"
+  },
+  "dependencies": {},
+  "description": "Font Awesome, the iconic font designed for use with Twitter Bootstrap.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "8bd7820dc9921cad836c3ca88a992995c24cbe59",
+    "tarball": "https://registry.npmjs.org/components-font-awesome/-/components-font-awesome-4.6.1.tgz"
+  },
+  "gitHead": "41891b80da2ee0a328c93d465bd3699edec2ca6c",
+  "homepage": "https://github.com/components/font-awesome#readme",
+  "license": [
+    "MIT",
+    "OFL-1.1"
+  ],
+  "main": "css/font-awesome.css",
+  "maintainers": [
+    {
+      "name": "ducin",
+      "email": "tomasz.ducin@gmail.com"
+    },
+    {
+      "name": "robloach",
+      "email": "robloach@gmail.com"
+    }
+  ],
+  "name": "components-font-awesome",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/components/font-awesome.git"
+  },
+  "scripts": {},
+  "version": "4.6.1"
+}
