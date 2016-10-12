@@ -1,7 +1,7 @@
 var FavoriteMessageStorage = (function () {
     function FavoriteMessageStorage() {
         this.storage = chrome.storage.local;
-        this.storage.clear();
+        // this.storage.clear()
     }
     /**
      * メッセージをストレージに保存
@@ -11,7 +11,7 @@ var FavoriteMessageStorage = (function () {
     FavoriteMessageStorage.prototype.saveMessage = function (rid, html) {
         var defaults = (_a = {}, _a[rid] = [], _a);
         var storage = this.storage;
-        var compressed = LZString.compressToEncodedURIComponent(html);
+        var compressed = this.compress(html);
         console.log(compressed);
         this.storage.get(defaults, function (items) {
             items[rid].push(compressed);
@@ -27,7 +27,7 @@ var FavoriteMessageStorage = (function () {
     FavoriteMessageStorage.prototype.removeMessage = function (rid, html) {
         var _this = this;
         var defaults = (_a = {}, _a[rid] = [], _a);
-        var compressed = LZString.compressToEncodedURIComponent(html);
+        var compressed = this.compress(html);
         this.storage.get(defaults, function (items) {
             var messageList = items[rid];
             var index = messageList.indexOf(html);
@@ -47,8 +47,9 @@ var FavoriteMessageStorage = (function () {
      */
     FavoriteMessageStorage.prototype.getFavoriteMessageList = function (rid, callback) {
         var defaults = (_a = {}, _a[rid] = [], _a);
+        var _this = this;
         this.storage.get(defaults, function (items) {
-            callback(items[rid].map(function (html) { return LZString.decompressFromEncodedURIComponent(html); }));
+            callback(items[rid].map(function (html) { return _this.decompress(html); }));
         });
         var _a;
     };
@@ -68,6 +69,20 @@ var FavoriteMessageStorage = (function () {
      */
     FavoriteMessageStorage.prototype.getRoomIdList = function (callback) {
         Object.keys(this.storage.get(function (items) { return callback(Object.keys(items)); }));
+    };
+    /**
+     * 文字列を圧縮
+     * @param text 圧縮したい文字列
+     */
+    FavoriteMessageStorage.prototype.compress = function (text) {
+        return LZString.compressToEncodedURIComponent(text);
+    };
+    /**
+     * 圧縮された文字列を解凍
+     * @param text 圧縮したい文字列
+     */
+    FavoriteMessageStorage.prototype.decompress = function (text) {
+        return LZString.decompressFromEncodedURIComponent(text);
     };
     return FavoriteMessageStorage;
 }());

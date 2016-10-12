@@ -6,7 +6,7 @@ class FavoriteMessageStorage {
 
   constructor () {
     this.storage = chrome.storage.local
-    this.storage.clear()
+    // this.storage.clear()
   }
 
   /**
@@ -14,10 +14,10 @@ class FavoriteMessageStorage {
    * @param {String} rid ルームID
    * @param {String} mid メッセージID
    */
-  saveMessage (rid: string, html: string) {
+  public saveMessage (rid: string, html: string) {
     const defaults = {[rid]: []}
     const storage = this.storage
-    const compressed = LZString.compressToEncodedURIComponent(html)
+    const compressed = this.compress(html)
     console.log(compressed)
     this.storage.get(defaults, function (items) {
       items[rid].push(compressed)
@@ -30,9 +30,9 @@ class FavoriteMessageStorage {
    * @param {String} rid ルームID
    * @param {String} mid メッセージID
    */
-  removeMessage (rid: string, html: string) {
+  public removeMessage (rid: string, html: string) {
     const defaults = {[rid]: []}
-    const compressed = LZString.compressToEncodedURIComponent(html)
+    const compressed = this.compress(html)
 
     this.storage.get(defaults, items => {
       let messageList = items[rid]
@@ -52,10 +52,12 @@ class FavoriteMessageStorage {
    * @param {String} rid ルームID
    * @param {messageListCallback} callback お気に入りされたメッセージのIDの配列を匹スト
    */
-  getFavoriteMessageList (rid: string, callback) {
+  public getFavoriteMessageList (rid: string, callback) {
     const defaults = {[rid]: []}
+
+    const _this = this
     this.storage.get(defaults, function (items) {
-      callback(items[rid].map(html => LZString.decompressFromEncodedURIComponent(html)))
+      callback(items[rid].map(html => _this.decompress(html)))
     })
   }
 
@@ -64,7 +66,7 @@ class FavoriteMessageStorage {
    * @param {String} rid ルームID
    * @param {messageIdListCallback} callback お気に入りされたメッセージのIDの配列を匹スト
    */
-  getMessageIdList (rid: string, callback) {
+  public getMessageIdList (rid: string, callback) {
     this.getFavoriteMessageList(rid, favoriteMessageList => {
       callback(favoriteMessageList.map(message => $(message).attr('data-mid')))
     })
@@ -74,8 +76,24 @@ class FavoriteMessageStorage {
    * お気に入りメッセージを持つルームのIDの配列を返す
    * @param {roomIdListCallback} callback
    */
-  getRoomIdList (callback) {
+  public getRoomIdList (callback) {
     Object.keys(this.storage.get(items => callback(Object.keys(items))))
+  }
+
+  /**
+   * 文字列を圧縮
+   * @param text 圧縮したい文字列
+   */
+  private compress(text: string): string {
+    return LZString.compressToEncodedURIComponent(text)
+  }
+
+  /**
+   * 圧縮された文字列を解凍
+   * @param text 圧縮したい文字列
+   */
+  private decompress(text: string): string {
+    return LZString.decompressFromEncodedURIComponent(text)
   }
 
   /**
