@@ -45,7 +45,7 @@ class StarMesse {
    * お気に入りメッセージを表示するサイドバーを追加
    */
   private addSidebar () {
-    $('body').prepend('<div class="sidebar"><div class="sidebar-content"></div></div>')
+    $('#_wrapper').append('<div class="sidebar"><div class="sidebar-content"></div></div>')
     $('.sidebar').prepend('<h1 id="_favoriteRoomTitle" class="contentHl mainContentHl"></h1>')
     $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim">お気に入りメッセージを表示</span>')
     $('#_favoriteRoomTitle').append('<i id="sidebarCloseBtn" class="fa fa-times close-btn" aria-hidden="true" style="margin-right: 5px;"></i>')
@@ -61,13 +61,12 @@ class StarMesse {
     let $button = $('<div id="showFavoriteMessageButton" class="_button _showDescription btnLarge button" style="text-align: center;padding: initial;" aria-label="お気に入りメッセージ" role="button" aria-disabled="false"></div>')
     $button.append('<sapn class="fa fa-star"></sapn>')
 
-    const _this = this
-    $button.on('click', function () {
-      if (_this.checkedFilterIcon()) {
-        _this.closeSidebar()
+    $button.on('click', () => {
+      if (this.checkedFilterIcon()) {
+        this.closeSidebar()
       } else {
-        const roomId: string = _this.getCurrentRoomId()
-        _this.storage.getFavoriteMessageList(roomId, _this.showSidebar)
+        const roomId: string = this.getCurrentRoomId()
+        this.storage.getFavoriteMessageList(roomId, this.showSidebar.bind(this))
       }
     })
 
@@ -76,7 +75,6 @@ class StarMesse {
     // ボタンを追加した分、メンバーリストを左にずらす
     $('#_subRoomMemberArea').css('right', '185px')
   }
-
 
   /**
    * チャットのメッセージ一覧が更新された際に呼ばれるコールバック関数
@@ -89,9 +87,8 @@ class StarMesse {
     const roomId = this.getCurrentRoomId()
 
     // メッセージにお気に入り登録するためのアイコンボタンを追加
-    const addFavoriteIcon = this.addFavoriteIcon.bind(this)
-    $messages.each(function () {
-      addFavoriteIcon($(this))
+    $messages.get().forEach(message => {
+      this.addFavoriteIcon($(message))
     })
 
     // お気に入り登録されているメッセージのお気に入りアイコンをチェック状態にする
@@ -128,6 +125,14 @@ class StarMesse {
     }
   }
 
+  private observeSidebar(records: Array<MutationRecord>) {
+    if (records.length) return
+
+    $(records[0].addedNodes).filter('.favorite-icon').each(function() {
+
+    })
+  }
+
   /**
    * お気に入りメッセージを持つチャットのみ表示するボタンが選択されているかを返す
    * @returns {boolean}
@@ -141,8 +146,7 @@ class StarMesse {
    * @returns チャットルームのID
    */
   private getCurrentRoomId (): string {
-    const url = window.location.href
-    return url.replace(/.*#!rid/, '')
+    return $('#_chatContent ._message').attr('data-rid')
   }
 
   /**
@@ -151,26 +155,43 @@ class StarMesse {
    * @param $messaage アイコンを追加するメッセージ
    */
   private addFavoriteIcon ($message: JQuery) {
-    // お気に入り登録アイコンが付いていない状態のHTMLを取得
-    const html = $message.prop('outerHTML')
-    const roomId = this.getCurrentRoomId()
-
     // お気に入りアイコンを追加
     const $timeStamp = $message.find('._timeStamp')
     const $favoriteIcon = $('<sapn class="favorite-icon fa fa-star un-checked" style="margin-left: 5px;"></sapn>')
     $timeStamp.append($favoriteIcon)
 
+    const html = $message.prop('outerHTML')
+    const messageId = $message.attr('data-mid')
+
     // アイコンをクリックした時にメッセージを追加or削除する
     const _this = this
+    const roomId = this.getCurrentRoomId()
     $favoriteIcon.on('click', function () {
+      // アイコンのチェック状態を更新
+      // _this.reverseIconChecked($favoriteIcon)
+
+      // 更新された状態がチェック状態ならメッセージを保存
       if ($favoriteIcon.hasClass('checked')) {
-        _this.unCheckIcon($favoriteIcon)
-        _this.storage.removeMessage(roomId, html)
+        _this.storage.removeMessage(roomId, messageId)
+        _this.unCheckIcon($favoriteIcon);
       } else {
-        _this.checkIcon($favoriteIcon)
-        _this.storage.saveMessage(roomId, html)
+        _this.storage.saveMessage(roomId, messageId, html)
+        _this.checkIcon($favoriteIcon);
       }
     })
+  }
+
+  /**
+   * アイコンのチェック状態を反転させる
+   * @param $icon
+   */
+  private reverseIconChecked($icon: JQuery) {
+    if($icon.hasClass('checked')) {
+      this.unCheckIcon($icon);
+    }
+    else {
+      this.checkIcon($icon);
+    }
   }
 
   /**
@@ -216,14 +237,29 @@ class StarMesse {
     $favoriteTimeline.children().remove()
 
     // お気に入りメッセージを追加
-    favoriteMessageList.forEach(html => $favoriteTimeline.append(html))
+    favoriteMessageList.forEach(html => {
+      const $message = $(html)
+      let $favoriteIcon = $message.find('.favorite-icon')
+      this.checkIcon($favoriteIcon)
+
+      $favoriteIcon.get(0).addEventListener('click', () => {
+        this.storage.removeMessage(this.getCurrentRoomId(), html)
+        $message.remove()
+        const messageId = $message.attr('data-mid')
+
+        const $icon = $(`#_mainContent ._message[data-mid="${messageId}"]`).find('.favorite-icon')
+        this.unCheckIcon($icon)
+      })
+
+      $favoriteTimeline.append($message)
+    })
 
     // チャット部屋の名前をサイドバーの名前に設定
     const roomTitleText = $('#_mainContent ._roomTitleText').text()
     $('.sidebar ._roomTitleText').text(roomTitleText)
 
     // お気に入りメッセージ一覧を追加
-    $('.sidebar-content').append($favoriteTimeline.get(0).outerHTML)
+    $('.sidebar-content').append($favoriteTimeline)
 
     $('.sidebar').addClass('open')
   }

@@ -1,20 +1,20 @@
 var FavoriteMessageStorage = (function () {
     function FavoriteMessageStorage() {
         this.storage = chrome.storage.local;
-        // this.storage.clear()
+        this.storage.clear();
     }
     /**
      * メッセージをストレージに保存
-     * @param {String} rid ルームID
+     * @param {String} roomId ルームID
      * @param {String} mid メッセージID
      */
-    FavoriteMessageStorage.prototype.saveMessage = function (rid, html) {
-        var defaults = (_a = {}, _a[rid] = [], _a);
+    FavoriteMessageStorage.prototype.saveMessage = function (roomId, messageId, html) {
+        var defaults = (_a = {}, _a[roomId] = [], _a);
         var storage = this.storage;
         var compressed = this.compress(html);
-        console.log(compressed);
+        var message = { id: messageId, html: compressed };
         this.storage.get(defaults, function (items) {
-            items[rid].push(compressed);
+            items[roomId].push(message);
             storage.set(items);
         });
         var _a;
@@ -24,17 +24,16 @@ var FavoriteMessageStorage = (function () {
      * @param {String} rid ルームID
      * @param {String} mid メッセージID
      */
-    FavoriteMessageStorage.prototype.removeMessage = function (rid, html) {
+    FavoriteMessageStorage.prototype.removeMessage = function (roomId, messageId) {
         var _this = this;
-        var defaults = (_a = {}, _a[rid] = [], _a);
-        var compressed = this.compress(html);
+        var defaults = (_a = {}, _a[roomId] = [], _a);
         this.storage.get(defaults, function (items) {
-            var messageList = items[rid];
-            var index = messageList.indexOf(html);
+            var messageList = items[roomId];
+            var index = messageList.map(function (message) { return message.id; }).indexOf(messageId);
             messageList.splice(index, 1);
-            _this.storage.set((_a = {}, _a[rid] = messageList, _a));
+            _this.storage.set((_a = {}, _a[roomId] = messageList, _a));
             if (messageList.length === 0) {
-                _this.storage.remove(rid);
+                _this.storage.remove(roomId);
             }
             var _a;
         });
@@ -49,18 +48,18 @@ var FavoriteMessageStorage = (function () {
         var defaults = (_a = {}, _a[rid] = [], _a);
         var _this = this;
         this.storage.get(defaults, function (items) {
-            callback(items[rid].map(function (html) { return _this.decompress(html); }));
+            callback(items[rid].map(function (message) { return _this.decompress(message.html); }));
         });
         var _a;
     };
     /**
-     * 引数で指定したチャットのお気に入りメッセージのリストを返す
+     * 引数で指定したチャットのお気に入りメッセージIDのリストを返す
      * @param {String} rid ルームID
      * @param {messageIdListCallback} callback お気に入りされたメッセージのIDの配列を匹スト
      */
     FavoriteMessageStorage.prototype.getMessageIdList = function (rid, callback) {
         this.getFavoriteMessageList(rid, function (favoriteMessageList) {
-            callback(favoriteMessageList.map(function (message) { return $(message).attr('data-mid'); }));
+            callback(favoriteMessageList.map(function (message) { return $(message.html).attr('data-mid'); }));
         });
     };
     /**
@@ -124,7 +123,7 @@ var StarMesse = (function () {
      */
     StarMesse.prototype.addSidebar = function () {
         var _this = this;
-        $('body').prepend('<div class="sidebar"><div class="sidebar-content"></div></div>');
+        $('#_wrapper').append('<div class="sidebar"><div class="sidebar-content"></div></div>');
         $('.sidebar').prepend('<h1 id="_favoriteRoomTitle" class="contentHl mainContentHl"></h1>');
         $('#_favoriteRoomTitle').append('<span class="_roomTitleText autotrim">お気に入りメッセージを表示</span>');
         $('#_favoriteRoomTitle').append('<i id="sidebarCloseBtn" class="fa fa-times close-btn" aria-hidden="true" style="margin-right: 5px;"></i>');
@@ -136,19 +135,20 @@ var StarMesse = (function () {
      * サイドバーを表示するボタンを追加
      */
     StarMesse.prototype.addShowSidebarButton = function () {
+        var _this = this;
         var $button = $('<div id="showFavoriteMessageButton" class="_button _showDescription btnLarge button" style="text-align: center;padding: initial;" aria-label="お気に入りメッセージ" role="button" aria-disabled="false"></div>');
         $button.append('<sapn class="fa fa-star"></sapn>');
-        var _this = this;
         $button.on('click', function () {
             if (_this.checkedFilterIcon()) {
                 _this.closeSidebar();
             }
             else {
                 var roomId = _this.getCurrentRoomId();
-                _this.storage.getFavoriteMessageList(roomId, _this.showSidebar);
+                _this.storage.getFavoriteMessageList(roomId, _this.showSidebar.bind(_this));
             }
         });
         $('#_mainContent > div.chatRoomHeaderBtn.btnGroup').prepend($button);
+        // ボタンを追加した分、メンバーリストを左にずらす
         $('#_subRoomMemberArea').css('right', '185px');
     };
     /**
@@ -162,9 +162,8 @@ var StarMesse = (function () {
         var $messages = $(records[0].addedNodes).filter('._message');
         var roomId = this.getCurrentRoomId();
         // メッセージにお気に入り登録するためのアイコンボタンを追加
-        var addFavoriteIcon = this.addFavoriteIcon.bind(this);
-        $messages.each(function () {
-            addFavoriteIcon($(this));
+        $messages.get().forEach(function (message) {
+            _this.addFavoriteIcon($(message));
         });
         // お気に入り登録されているメッセージのお気に入りアイコンをチェック状態にする
         this.storage.getMessageIdList(roomId, function (messageIdList) {
@@ -198,6 +197,12 @@ var StarMesse = (function () {
             this.storage.getRoomIdList(this.filterFavoriteMessageRoom);
         }
     };
+    StarMesse.prototype.observeSidebar = function (records) {
+        if (records.length)
+            return;
+        $(records[0].addedNodes).filter('.favorite-icon').each(function () {
+        });
+    };
     /**
      * お気に入りメッセージを持つチャットのみ表示するボタンが選択されているかを返す
      * @returns {boolean}
@@ -210,8 +215,7 @@ var StarMesse = (function () {
      * @returns チャットルームのID
      */
     StarMesse.prototype.getCurrentRoomId = function () {
-        var url = window.location.href;
-        return url.replace(/.*#!rid/, '');
+        return $('#_chatContent ._message').attr('data-rid');
     };
     /**
      * メッセージにお気に入り登録アイコンを追加
@@ -219,25 +223,40 @@ var StarMesse = (function () {
      * @param $messaage アイコンを追加するメッセージ
      */
     StarMesse.prototype.addFavoriteIcon = function ($message) {
-        // お気に入り登録アイコンが付いていない状態のHTMLを取得
-        var html = $message.prop('outerHTML');
-        var roomId = this.getCurrentRoomId();
         // お気に入りアイコンを追加
         var $timeStamp = $message.find('._timeStamp');
         var $favoriteIcon = $('<sapn class="favorite-icon fa fa-star un-checked" style="margin-left: 5px;"></sapn>');
         $timeStamp.append($favoriteIcon);
+        var html = $message.prop('outerHTML');
+        var messageId = $message.attr('data-mid');
         // アイコンをクリックした時にメッセージを追加or削除する
         var _this = this;
+        var roomId = this.getCurrentRoomId();
         $favoriteIcon.on('click', function () {
+            // アイコンのチェック状態を更新
+            // _this.reverseIconChecked($favoriteIcon)
+            // 更新された状態がチェック状態ならメッセージを保存
             if ($favoriteIcon.hasClass('checked')) {
+                _this.storage.removeMessage(roomId, messageId);
                 _this.unCheckIcon($favoriteIcon);
-                _this.storage.removeMessage(roomId, html);
             }
             else {
+                _this.storage.saveMessage(roomId, messageId, html);
                 _this.checkIcon($favoriteIcon);
-                _this.storage.saveMessage(roomId, html);
             }
         });
+    };
+    /**
+     * アイコンのチェック状態を反転させる
+     * @param $icon
+     */
+    StarMesse.prototype.reverseIconChecked = function ($icon) {
+        if ($icon.hasClass('checked')) {
+            this.unCheckIcon($icon);
+        }
+        else {
+            this.checkIcon($icon);
+        }
     };
     /**
      * アイコンをチェック状態にする
@@ -272,18 +291,33 @@ var StarMesse = (function () {
      * @param favoriteMessageList
      */
     StarMesse.prototype.showSidebar = function (favoriteMessageList) {
+        var _this = this;
         // メッセージ一覧のDOMをサイドバーで表示するために修正
         var $favoriteTimeline = $('#_timeLine').clone();
         $favoriteTimeline.attr('id', '_favoriteTimeline');
         $favoriteTimeline.css('height', '');
         $favoriteTimeline.children().remove();
         // お気に入りメッセージを追加
-        favoriteMessageList.forEach(function (html) { return $favoriteTimeline.append(html); });
+        favoriteMessageList.forEach(function (html) {
+            var $message = $(html);
+            var $favoriteIcon = $message.find('.favorite-icon');
+            _this.checkIcon($favoriteIcon);
+            $favoriteIcon.get(0).addEventListener('click', function () {
+                _this.storage.removeMessage(_this.getCurrentRoomId(), html);
+                $message.remove();
+                var messageId = $message.attr('data-mid');
+                console.log(messageId);
+                var $icon = $("#_mainContent ._message[data-mid=\"" + messageId + "\"]").find('.favorite-icon');
+                console.log($icon);
+                _this.unCheckIcon($icon);
+            });
+            $favoriteTimeline.append($message);
+        });
         // チャット部屋の名前をサイドバーの名前に設定
         var roomTitleText = $('#_mainContent ._roomTitleText').text();
         $('.sidebar ._roomTitleText').text(roomTitleText);
         // お気に入りメッセージ一覧を追加
-        $('.sidebar-content').append($favoriteTimeline.get(0).outerHTML);
+        $('.sidebar-content').append($favoriteTimeline);
         $('.sidebar').addClass('open');
     };
     /**

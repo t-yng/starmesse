@@ -6,21 +6,21 @@ class FavoriteMessageStorage {
 
   constructor () {
     this.storage = chrome.storage.local
-    // this.storage.clear()
+    this.storage.clear()
   }
 
   /**
    * メッセージをストレージに保存
-   * @param {String} rid ルームID
+   * @param {String} roomId ルームID
    * @param {String} mid メッセージID
    */
-  public saveMessage (rid: string, html: string) {
-    const defaults = {[rid]: []}
+  public saveMessage (roomId: string, messageId: string, html: string) {
+    const defaults = {[roomId]: []}
     const storage = this.storage
     const compressed = this.compress(html)
-    console.log(compressed)
+    const message = {id: messageId, html: compressed}
     this.storage.get(defaults, function (items) {
-      items[rid].push(compressed)
+      items[roomId].push(message)
       storage.set(items)
     })
   }
@@ -30,19 +30,18 @@ class FavoriteMessageStorage {
    * @param {String} rid ルームID
    * @param {String} mid メッセージID
    */
-  public removeMessage (rid: string, html: string) {
-    const defaults = {[rid]: []}
-    const compressed = this.compress(html)
+  public removeMessage (roomId: string, messageId: string) {
+    const defaults = {[roomId]: []}
 
     this.storage.get(defaults, items => {
-      let messageList = items[rid]
-      const index = messageList.indexOf(html)
+      let messageList = items[roomId]
+      const index = messageList.map(message => message.id).indexOf(messageId)
       messageList.splice(index, 1)
 
-      this.storage.set({[rid]: messageList})
+      this.storage.set({[roomId]: messageList})
 
       if (messageList.length === 0) {
-        this.storage.remove(rid)
+        this.storage.remove(roomId)
       }
     })
   }
@@ -57,18 +56,18 @@ class FavoriteMessageStorage {
 
     const _this = this
     this.storage.get(defaults, function (items) {
-      callback(items[rid].map(html => _this.decompress(html)))
+      callback(items[rid].map(message => _this.decompress(message.html)))
     })
   }
 
   /**
-   * 引数で指定したチャットのお気に入りメッセージのリストを返す
+   * 引数で指定したチャットのお気に入りメッセージIDのリストを返す
    * @param {String} rid ルームID
    * @param {messageIdListCallback} callback お気に入りされたメッセージのIDの配列を匹スト
    */
   public getMessageIdList (rid: string, callback) {
     this.getFavoriteMessageList(rid, favoriteMessageList => {
-      callback(favoriteMessageList.map(message => $(message).attr('data-mid')))
+      callback(favoriteMessageList.map(message => $(message.html).attr('data-mid')))
     })
   }
 
